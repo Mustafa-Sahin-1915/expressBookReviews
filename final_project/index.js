@@ -10,8 +10,19 @@ app.use(express.json());
 
 app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUninitialized: true}))
 
-app.use("/customer/auth/*", function auth(req,res,next){
-//Write the authenication mechanism here
+app.use("/customer/auth/*", function auth(req,res,next) {
+    const auth = req.headers.authorization;
+    if (!auth) {
+        return res.status(401).json({ message: "Access denied" });
+    }
+    const token = auth.split(' ')[1];
+    jwt.verify(token, jwtSecret, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ message: "Invalid token" });
+        }
+        req.user = decoded;
+        next();
+    });
 });
  
 const PORT =5000;
