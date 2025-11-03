@@ -10,7 +10,7 @@ public_users.post("/register", (req,res) => {
     if (!username || !password) {
         return res.status(400).send({ message: "Username and password are required" });
     }
-    if (users.find(user => user.username === username)) {
+    if (!isValid(username)) {
         return res.status(400).send({ message: "Username already exists" });
     }
     users.push({ username, password });
