@@ -18,11 +18,14 @@ public_users.post("/register", (req,res) => {
 });
 
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
+public_users.get('/', async function (req, res) {
   try {
-    res.status(200).json(JSON.stringify(books));
+    const bookList = await new Promise((resolve, reject) => {
+        resolve(JSON.stringify(books));
+    });
+    res.status(200).json(bookList);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching book list", error: error.message });
+    res.status(500).json({ message: error.message });
   }
 });
 
