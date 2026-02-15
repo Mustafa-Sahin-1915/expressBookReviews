@@ -2,8 +2,8 @@ const express = require('express');
 const axios = require('axios');
 let public_users = express.Router();
 
-// Base URL for example external book API (replace with real URL if needed)
-const BOOKS_API_URL = 'https://example.com/api/books';
+
+const BOOKS_API_URL = 'https://openlibrary.org/developers/api';
 
 // List all books
 public_users.get('/', (req, res) => {
