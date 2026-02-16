@@ -101,4 +101,49 @@ public_users.get('/title/:title', async (req, res) => {
     }
 });
 
+// ---------------------------
+// Search book by ISBN or title
+// ---------------------------
+public_users.get('/search', async (req, res) => {
+    const { isbn, title } = req.query;
+
+    if (!isbn && !title) {
+        return res.status(400).json({ message: 'Please provide either isbn or title as a query parameter' });
+    }
+
+    try {
+        // Search by ISBN if provided
+        if (isbn) {
+            const response = await axios.get(`${OPENLIB_API}/isbn/${isbn}.json`);
+            return res.status(200).json({
+                title: response.data.title,
+                authors: response.data.authors?.map(a => a.name) || [],
+                publish_date: response.data.publish_date,
+                publishers: response.data.publishers || [],
+                number_of_pages: response.data.number_of_pages || 'N/A',
+                isbn: isbn
+            });
+        }
+
+        // Search by title if provided
+        if (title) {
+            const response = await axios.get(`${OPENLIB_API}/search.json?title=${encodeURIComponent(title)}`);
+            const books = response.data.docs.map(doc => ({
+                title: doc.title,
+                author_name: doc.author_name || [],
+                first_publish_year: doc.first_publish_year || 'N/A',
+                isbn: doc.isbn ? doc.isbn[0] : 'N/A'
+            }));
+            if (books.length === 0) {
+                return res.status(404).json({ message: 'No books found for this title' });
+            }
+            return res.status(200).json(books);
+        }
+
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch book(s)', error: error.message });
+    }
+});
+
+
 module.exports.general = public_users;
