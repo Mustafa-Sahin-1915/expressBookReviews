@@ -1,149 +1,91 @@
 const express = require('express');
-const axios = require('axios');
+let books = require("./booksdb.js");
+let isValid = require("./auth_users.js").isValid;
+let users = require("./auth_users.js").users;
 const public_users = express.Router();
 
-// Base Open Library API URL
-const OPENLIB_API = 'https://openlibrary.org';
-
-// ---------------------------
-// Get a list of popular books (example: "love" subject)
-// ---------------------------
-public_users.get('/books', async (req, res) => {
-    try {
-        const response = await axios.get(`${OPENLIB_API}/subjects/love.json?limit=10`);
-        const books = response.data.works.map(work => ({
-            title: work.title,
-            authors: work.authors.map(a => a.name),
-            key: work.key,
-            edition_count: work.edition_count
-        }));
-        res.status(200).json(books);
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to fetch books', error: error.message });
+const doesExist = (username)=>{
+    let userswithsamename = users.filter((user)=>{
+      return user.username === username
+    });
+    if(userswithsamename.length > 0){
+      return true;
+    } else {
+      return false;
     }
+  }
+  
+public_users.post("/register", (req, res) => {
+    const username = req.query.username;
+    const password = req.query.password;
+  
+    if (username && password) {
+      if (!doesExist(username)) { 
+        users.push({"username":username,"password":password});
+        return res.status(200).json({message: "User successfully registred. Now you can login"});
+      } else {
+        return res.status(404).json({message: "User already exists!"});    
+      }
+    } 
+    return res.status(404).json({message: "Unable to register user. Username and/or password not provided"});
 });
 
-// ---------------------------
-// Get book details by ISBN
-// ---------------------------
-public_users.get('/isbn/:isbn', async (req, res) => {
+// Get the book list available in the shop
+public_users.get('/', function (req, res) {
+    res.send(JSON.stringify({ books }, null, 4));
+});
+
+// Get the user list available in the shop
+public_users.get('/users', function (req, res) {
+    res.send(JSON.stringify({ users }, null, 4));
+});
+
+// Get book details based on ISBN
+public_users.get('/isbn/:isbn', function (req, res) {
     const isbn = req.params.isbn;
-    try {
-        const response = await axios.get(`${OPENLIB_API}/isbn/${isbn}.json`);
-        res.status(200).json(response.data);
-    } catch (error) {
-        res.status(404).json({ message: 'Book not found', error: error.message });
-    }
-});
+    const book = Object.values(books).find(book => book.isbn === isbn);
 
-// ---------------------------
-// List all authors from a subject (example: "love")
-// ---------------------------
-public_users.get('/authors', async (req, res) => {
-    try {
-        const response = await axios.get(`${OPENLIB_API}/subjects/love.json?limit=50`);
-        const authors = new Set();
-        response.data.works.forEach(work => {
-            work.authors.forEach(a => authors.add(a.name));
-        });
-        res.status(200).json([...authors]);
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to fetch authors', error: error.message });
+    if (book) {
+        res.send(JSON.stringify(book, null, 4));
+    } else {
+        res.send(`Book with ISBN ${isbn} not found.`);
     }
-});
+}); 
 
-// ---------------------------
-// Get books by author name
-// ---------------------------
-public_users.get('/author/:author', async (req, res) => {
+// Get book details based on author
+public_users.get('/author/:author', function (req, res) {
     const author = req.params.author;
-    try {
-        const response = await axios.get(`${OPENLIB_API}/search.json?author=${encodeURIComponent(author)}`);
-        const books = response.data.docs.map(doc => ({
-            title: doc.title,
-            isbn: doc.isbn ? doc.isbn[0] : 'N/A',
-            first_publish_year: doc.first_publish_year
-        }));
-        res.status(200).json(books);
-    } catch (error) {
-        res.status(404).json({ message: 'Author not found', error: error.message });
+    const book = Object.values(books).find(book => book.author === author);
+
+    if (book) {
+        res.send(JSON.stringify(book, null, 4));
+    } else {
+        res.send(`Book with author name ${author} not found.`);
     }
 });
 
-// ---------------------------
-// List titles from a subject (example: "love")
-// ---------------------------
-public_users.get('/titles', async (req, res) => {
-    try {
-        const response = await axios.get(`${OPENLIB_API}/subjects/love.json?limit=50`);
-        const titles = response.data.works.map(work => work.title);
-        res.status(200).json(titles);
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to fetch titles', error: error.message });
-    }
-});
-
-// ---------------------------
-// Get books by title keyword
-// ---------------------------
-public_users.get('/title/:title', async (req, res) => {
+// Get all books based on title
+public_users.get('/title/:title', function (req, res) {
     const title = req.params.title;
-    try {
-        const response = await axios.get(`${OPENLIB_API}/search.json?title=${encodeURIComponent(title)}`);
-        const books = response.data.docs.map(doc => ({
-            title: doc.title,
-            author_name: doc.author_name,
-            isbn: doc.isbn ? doc.isbn[0] : 'N/A'
-        }));
-        res.status(200).json(books);
-    } catch (error) {
-        res.status(404).json({ message: 'Title not found', error: error.message });
+    const book = Object.values(books).find(book => book.title === title);
+
+    if (book) {
+        res.send(JSON.stringify(book, null, 4));
+    } else {
+        res.send(`Book with title ${title} not found.`);
     }
 });
 
-// ---------------------------
-// Search book by ISBN or title
-// ---------------------------
-public_users.get('/search', async (req, res) => {
-    const { isbn, title } = req.query;
-
-    if (!isbn && !title) {
-        return res.status(400).json({ message: 'Please provide either isbn or title as a query parameter' });
-    }
-
-    try {
-        // Search by ISBN if provided
-        if (isbn) {
-            const response = await axios.get(`${OPENLIB_API}/isbn/${isbn}.json`);
-            return res.status(200).json({
-                title: response.data.title,
-                authors: response.data.authors?.map(a => a.name) || [],
-                publish_date: response.data.publish_date,
-                publishers: response.data.publishers || [],
-                number_of_pages: response.data.number_of_pages || 'N/A',
-                isbn: isbn
-            });
-        }
-
-        // Search by title if provided
-        if (title) {
-            const response = await axios.get(`${OPENLIB_API}/search.json?title=${encodeURIComponent(title)}`);
-            const books = response.data.docs.map(doc => ({
-                title: doc.title,
-                author_name: doc.author_name || [],
-                first_publish_year: doc.first_publish_year || 'N/A',
-                isbn: doc.isbn ? doc.isbn[0] : 'N/A'
-            }));
-            if (books.length === 0) {
-                return res.status(404).json({ message: 'No books found for this title' });
-            }
-            return res.status(200).json(books);
-        }
-
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to fetch book(s)', error: error.message });
+//  Get book review
+public_users.get('/review/:isbn', function (req, res) {
+    const isbn = req.params.isbn;
+    const book = Object.values(books).find(book => book.isbn === isbn);
+    const review = book.reviews;
+    if (book) {
+        res.send(JSON.stringify(review, null, 4));
+    } else {
+        res.send(`Book with ISBN ${isbn} not found.`);
     }
 });
-
 
 module.exports.general = public_users;
