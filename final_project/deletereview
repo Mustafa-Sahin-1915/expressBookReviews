@@ -1,0 +1,1 @@
+curl -X DELETE "https://aidenthomas0-5500.theianext-0-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/customer/auth/review/1"
