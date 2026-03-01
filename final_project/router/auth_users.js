@@ -61,7 +61,7 @@ regd_users.put("/auth/reviews/:isbn", (req, res) => {
 
     //if username was not there
     if(!reviews) {
-     return res.statusus(404).json({message:"review can't be empty"});
+     return res.status(404).json({message:"review can't be empty"});
     }
 
     if(!books[isbn]) {
@@ -75,6 +75,22 @@ regd_users.put("/auth/reviews/:isbn", (req, res) => {
     books[isbn].reviews[username]=reviews;
 
    return res.status(200).json({message:"Review added/updated successfully!",reviews:books[isbn].reviews});
+});
+
+
+regd_users.delete("/auth/reviews/:isbn",(req,res) => {
+     const isbn=req.params.isbn;
+     const username=req.session.authorization.username;
+     if(!books[isbn]) {
+       return res.status(404).json({message:"Book not found"});
+     }
+     if(!books[isbn].reviews || !books[isbn].reviews[username]) {
+        return res.status(404).json({message:"reviews on user not found!"});
+     }
+
+     delete books[isbn].reviews[username];
+
+    res.status(204).send("user review for book was deleted");
 });
 
 module.exports.authenticated = regd_users;
