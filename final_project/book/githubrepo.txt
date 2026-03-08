@@ -1,0 +1,13 @@
+curl https://api.github.com/repos/FortuneBenn/expressBookReview
+
+Output:
+
+{
+  "id": 123456789,
+  "name": "expressBookReview",
+  "full_name": "FortuneBenn/expressBookReview",
+  "fork": true,
+  "parent": {
+    "full_name": "ibm-developer-skills-network/expressBookReview"
+  }
+}

@@ -1,0 +1,9 @@
+curl http://localhost:5000/review/9781593275846
+
+Output:
+
+{
+ "reviews": {
+  "user1": "Great book for beginners"
+ }
+}

@@ -1,0 +1,11 @@
+curl http://localhost:5000/author/Richard%20Silverman
+
+Output:
+
+[
+ {
+  "isbn": "9781593275846",
+  "author": "Richard Silverman",
+  "title": "Learn Python The Hard Way"
+ }
+]

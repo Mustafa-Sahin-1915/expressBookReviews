@@ -1,0 +1,12 @@
+curl -X PUT http://localhost:5000/customer/auth/review/9781593275846 \
+-H "Content-Type: application/json" \
+-d "{\"review\":\"Excellent Python book\"}"
+
+Output:
+
+{
+ "message": "Review added successfully",
+ "reviews": {
+  "ben": "Excellent Python book"
+ }
+}

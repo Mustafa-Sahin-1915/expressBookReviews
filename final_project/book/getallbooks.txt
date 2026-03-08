@@ -1,0 +1,18 @@
+curl http://localhost:5000/
+
+Output:
+
+{
+ "books": {
+  "9781593275846": {
+   "author": "Richard Silverman",
+   "title": "Learn Python The Hard Way",
+   "reviews": {}
+  },
+  "9781449331818": {
+   "author": "David Beazley",
+   "title": "Python Cookbook",
+   "reviews": {}
+  }
+ }
+}
